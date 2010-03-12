@@ -3,6 +3,9 @@
 #include <signal.h>
 #include <iostream>
 #include <sstream>
+#include <fstream>
+
+#define BITS_IN_A_BYTE 8
 
 bool run = true;
 
@@ -10,9 +13,16 @@ void sighandler ( int sig ) {
 	run = false;
 }
 
-int main( int argc, char * argv[] ) {
+int main( int argc, char ** argv ) {
 
-
+	char mask = (char) 1;
+	char buffer = (char) 0;
+	int counter = 0;
+	if( 1 != sizeof( mask ) ) {
+		std::cerr << "Uh oh! Your char size on this arch isn't a single byte. I can't fit that into my worldview." << std::endl;
+		return -1;
+	}
+	
 	signal( SIGABRT, &sighandler );
 	signal( SIGTERM, &sighandler );
 	signal( SIGINT, &sighandler );
@@ -33,13 +43,11 @@ int main( int argc, char * argv[] ) {
 	int i,j,k;
 	bool sentinel;
 
-	k = 0;
+	std::ofstream file( "data.bin", std::ios::out | std::ios::binary );
+	
 	while( run ) {
-		k++;
 		sentinel = false;
 		frame = cvQueryFrame( capture );
-
-		std::cout << "== Frame: " << k << " ==" << std::endl;
 
 		if( ! frame ) {
 			std::cerr << "ERROR: Couldn't get a frame!" << std::endl;
@@ -52,7 +60,15 @@ int main( int argc, char * argv[] ) {
 			for( j = 0; j < frame->width; j++ ) {
 				pixel = cvGet2D( frame, i, j );
 				if( pixel.val[0] > 200 ) {
-					std::cout << "Row: " << i << " Column: " << j << " Data: ( " << pixel.val[0] << ", " << pixel.val[1] << ", " << pixel.val[2] << " )" << std::endl;
+					int x = ( i * frame->width ) + j;
+					buffer = buffer << 1;
+					buffer = buffer ^ ( ( buffer ^ (char) x ) & mask );
+					if( ++counter >= 8 ) {
+						file.write( &buffer, 1 );
+						file.flush();
+						buffer = (char) 0;
+						counter = 0;
+					}
 					sentinel = true;
 					break;
 				}
@@ -64,6 +80,8 @@ int main( int argc, char * argv[] ) {
 
 	std::cout << "Shutting down..." << std::endl;
 
+	file.close();
+	
 	cvReleaseCapture( &capture );
 	//cvDestroyWindow( "view" );
 
