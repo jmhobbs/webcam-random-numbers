@@ -9,7 +9,7 @@
 #include <cmath>
 
 // Totally arbitrary.
-#define SAMPLE_SIZE 128
+#define SAMPLE_SIZE 1024
 // Almost arbitrary...
 #define THRESHOLD 215
 // I visually observed that the largest scintillations only affected a 4x4 block of pixels. So, skipping 4 rows seems safe FOR MY CAMERA
@@ -18,7 +18,7 @@
 // How consistent is your camera? Shielding might help ;-)
 #define MAX_CONSECUTIVE_DROPS 10
 // Show a progress bar every X bytes
-#define SAMPLE_PROGRESS_INTERVAL 12
+#define SAMPLE_PROGRESS_INTERVAL 32
 
 bool run = true;
 
