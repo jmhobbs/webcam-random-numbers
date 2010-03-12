@@ -64,7 +64,7 @@ int main( int argc, char ** argv ) {
 		}
 
 		if( ! block_image_captured ) {
-			if( cvSaveImage( "data.jpg", frame ) ) {
+			if( cvSaveImage( "data.png", frame ) ) {
 				std::cout << "Saved an image for the block." << std::endl;
 				block_image_captured = true;
 			}
