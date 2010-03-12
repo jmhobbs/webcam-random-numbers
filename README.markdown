@@ -29,3 +29,9 @@ I need to build up a big enough sample of data before I'll know for sure. At tha
 Am I? I know very little about all of the things I am doing here.  If I have a misplaced assumption and you know better, PLEASE let me know so I can fix it or abandon the project.
 
 Thanks, you're a peach.
+
+# Link Credits
+
+* [Webcam detector inspiration and howto.](http://www.youtube.com/watch?v=Lvm9gL4KVQg)
+* [Awesome bitwise masked merge (saved my weak little mind).](http://graphics.stanford.edu/~seander/bithacks.html#MaskedMerge)
+* [Randomness knowledge, inspiration, and free bits.](http://random.org/)
