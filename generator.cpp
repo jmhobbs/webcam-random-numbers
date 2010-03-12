@@ -2,28 +2,81 @@
 #include "highgui.h"
 #include <signal.h>
 #include <iostream>
+#include <sstream>
+#include <string>
 #include <fstream>
+#include <ctime>
+#include <cmath>
 
-// Totally arbitrary...
-#define BLOCK_SIZE 32
+// Totally arbitrary.
+#define SAMPLE_SIZE 128
 // Almost arbitrary...
 #define THRESHOLD 215
 // I visually observed that the largest scintillations only affected a 4x4 block of pixels. So, skipping 4 rows seems safe FOR MY CAMERA
+// Figure out your own row skip you lazy bum.
 #define ROW_SKIP 4
+// How consistent is your camera? Shielding might help ;-)
+#define MAX_CONSECUTIVE_DROPS 10
+// Show a progress bar every X bytes
+#define SAMPLE_PROGRESS_INTERVAL 12
 
 bool run = true;
 
+std::string get_sample_name () {
+	time_t rawtime;
+	struct tm * timeinfo;
+	char buffer [80];
+
+	time ( &rawtime );
+	timeinfo = localtime ( &rawtime );
+
+	strftime( buffer, 80, "data.%Y%m%d.%H%M%S", timeinfo );
+
+	return std::string ( buffer );
+}
+
+std::string get_time_stamp () {
+	time_t rawtime;
+	struct tm * timeinfo;
+	char buffer [80];
+
+	time ( &rawtime );
+	timeinfo = localtime ( &rawtime );
+
+	strftime( buffer, 80, "[ %Y-%m-%d %H:%M:%S ]   ", timeinfo );
+
+	return std::string ( buffer );
+}
+
+std::string get_progress_bar ( int complete ) {
+	
+	int pct = floor( (float) complete / (float) SAMPLE_SIZE * 100 );
+	
+	std::stringstream utl;
+	utl << "[";
+	for( int i = 10; i > 0; --i ) {
+		if( ( 11 - i ) * 10 > pct )
+			utl << "  ";
+		else
+			utl << "##";
+	}
+	utl << "] " << pct << "%";
+	
+	return utl.str();
+}
+
 void sighandler ( int sig ) {
+	std::cout << get_time_stamp() << "Caught SIG" << sig << std::endl;
 	run = false;
 }
 
 int main( int argc, char ** argv ) {
-
+	
 	char mask = (char) 1;
 	char buffer = (char) 0;
 	int counter = 0;
 	if( 1 != sizeof( mask ) ) {
-		std::cerr << "Uh oh! Your char size on this arch isn't a single byte. I can't fit that into my world view." << std::endl;
+		std::cout << "Uh oh! Your char size on this arch isn't a single byte. I can't fit that into my world view." << std::endl;
 		return -1;
 	}
 	
@@ -33,7 +86,7 @@ int main( int argc, char ** argv ) {
 
 	CvCapture* capture = cvCaptureFromCAM( CV_CAP_ANY );
 	if( ! capture ) {
-		std::cerr << "ERROR: Failed to start capture device." << std::endl;
+		std::cout << get_time_stamp() << "ERROR: Failed to start capture device." << std::endl;
 		return -1;
 	}
 
@@ -48,25 +101,51 @@ int main( int argc, char ** argv ) {
 	
 	CvScalar pixel;
 	int row,col;
+	std::stringstream string_util;
 
-	std::ofstream file( "data.bin", std::ios::out | std::ios::binary | std::ios::app );
+	std::string sample_name;
+	if( argc > 1 )
+		sample_name = argv[1];
+	else
+		sample_name = get_sample_name();
 	
-	int block_index = file.tellp();
-	bool block_image_captured = ( 0 != block_index );
+	string_util << sample_name << ".bin";
+	std::ofstream file( string_util.str().c_str(), std::ios::out | std::ios::binary | std::ios::app );
+	string_util.str("");
 	
+	int sample_index = file.tellp();
+	bool sample_image_captured = ( 0 != sample_index );
+	
+	if( sample_image_captured )
+		std::cout << get_time_stamp() << "Restarting Existing Sample: " << sample_name << " From Byte: " << sample_index << std::endl;
+	else
+		std::cout << get_time_stamp() << "Starting New Sample: " << sample_name << std::endl;
+
+	int drop_count = 0;
 	while( run ) {
 
 		frame = cvQueryFrame( capture );
 
 		if( ! frame ) {
-			std::cerr << "ERROR: Couldn't get a frame!" << std::endl;
-			break;
+			std::cout << get_time_stamp() << "ERROR: Dropped a frame!" << std::endl;
+			++drop_count;
+			
+			if( MAX_CONSECUTIVE_DROPS <= drop_count ) {
+				std::cout << get_time_stamp() << "FATAL: Too many dropped frames." << std::endl;
+				break;
+			}
+			
+			continue;
 		}
+		
+		drop_count = 0;
 
-		if( ! block_image_captured ) {
-			if( cvSaveImage( "data.png", frame ) ) {
-				std::cout << "Saved an image for the block." << std::endl;
-				block_image_captured = true;
+		if( ! sample_image_captured ) {
+			string_util << sample_name << ".png";
+			if( cvSaveImage( string_util.str().c_str(), frame ) ) {
+				std::cout << get_time_stamp() << "Saved image for the sample:" << string_util.str().c_str() << std::endl;
+				sample_image_captured = true;
+				string_util.str("");
 			}
 		}
 
@@ -87,17 +166,33 @@ int main( int argc, char ** argv ) {
 						file.write( &buffer, 1 );
 						file.flush();
 						
-						// Full block?
-						if( ++block_index >= BLOCK_SIZE ) {
-							std::cout << "Captured a full block. Exiting." << std::endl;
-							run = false;
-							row = frame->height;
-							break;
-						}
-						
 						// Reset our buffer
 						buffer = (char) 0;
 						counter = 0;
+						
+						if( 0 == sample_index % SAMPLE_PROGRESS_INTERVAL && sample_index != 0 ) {
+							std::cout << get_time_stamp() << "Progress " << get_progress_bar( sample_index ) << std::endl;
+						}
+						
+						// Full sample?
+						if( ++sample_index >= SAMPLE_SIZE ) {
+							std::cout << get_time_stamp() << "Finished Sample: " << sample_name << std::endl;
+							file.close();
+							
+							sample_name = get_sample_name();
+							
+							string_util << sample_name << ".bin";
+							file.open( string_util.str().c_str(), std::ios::out | std::ios::binary | std::ios::app );
+							string_util.str("");
+							
+							std::cout  << get_time_stamp() << "Starting New Sample: " << sample_name << std::endl;
+							
+							row = frame->height;
+							sample_index = 0;
+							sample_image_captured = false;
+							break;
+						}
+
 					}
 					// Skip a few rows to avoid double registering large scintillations
 					row += ROW_SKIP;
@@ -108,7 +203,7 @@ int main( int argc, char ** argv ) {
 
 	}
 
-	std::cout << "Shutting down..." << std::endl;
+	std::cout << get_time_stamp() << "Shutting Down" << std::endl;
 
 	file.close();
 	
