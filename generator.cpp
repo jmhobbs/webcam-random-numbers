@@ -5,8 +5,6 @@
 #include <sstream>
 #include <fstream>
 
-#define BITS_IN_A_BYTE 8
-
 bool run = true;
 
 void sighandler ( int sig ) {
@@ -43,7 +41,9 @@ int main( int argc, char ** argv ) {
 	int i,j,k;
 	bool sentinel;
 
-	std::ofstream file( "data.bin", std::ios::out | std::ios::binary );
+	std::ofstream file( "data.bin", std::ios::out | std::ios::binary | std::ios::app );
+	
+	int block_index = file.tellp();
 	
 	while( run ) {
 		sentinel = false;
@@ -66,6 +66,11 @@ int main( int argc, char ** argv ) {
 					if( ++counter >= 8 ) {
 						file.write( &buffer, 1 );
 						file.flush();
+						++block_index;
+						if( block_index >= 32 ) {
+							std::cout << "Captured 32 bytes total. Exiting." << std::endl;
+							run = false;
+						}
 						buffer = (char) 0;
 						counter = 0;
 					}
