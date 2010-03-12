@@ -30,8 +30,19 @@ Am I? I know very little about all of the things I am doing here.  If I have a m
 
 Thanks, you're a peach.
 
-# Link Credits
+# Credits
 
 * [Webcam detector inspiration and howto.](http://www.youtube.com/watch?v=Lvm9gL4KVQg)
 * [Awesome bitwise masked merge (saved my weak little mind).](http://graphics.stanford.edu/~seander/bithacks.html#MaskedMerge)
 * [Randomness knowledge, inspiration, and free bits.](http://random.org/)
+
+# Previous Works
+
+These are some links to existing work that is similar.  I found all of these after I had completed my hardware and my basic software.
+
+* Stunningly similar project (2006?) - <http://inventgeek.com/Projects/alpharad/overview.aspx>
+* No radiation needed (2001?) - <http://www.lavarnd.org/>
+
+# Other Links of Note
+
+* <http://en.wikipedia.org/wiki/Hardware_random_number_generator>
