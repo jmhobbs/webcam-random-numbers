@@ -33,7 +33,7 @@ from optparse import OptionParser
 if __name__ == "__main__" :
 
 	parser = OptionParser()
-	parser.add_option( "-g", "--gui", action="store_true", dest="showgui", default=False, help="show the gui; slows things down considerably")
+	parser.add_option( "-n", "--no-gui", action="store_false", dest="showgui", default=True, help="don't show the gui; speeds things up considerably")
 	parser.add_option( "-t", "--threshold", type="int", dest="threshold", default=200, help="threshold over which pixel values must be" )
 	(options, args) = parser.parse_args()
 
@@ -49,21 +49,16 @@ if __name__ == "__main__" :
 	highgui.cvSetCaptureProperty( camera, highgui.CV_CAP_PROP_FRAME_WIDTH, 640 )
 	highgui.cvSetCaptureProperty( camera, highgui.CV_CAP_PROP_FRAME_HEIGHT, 480 )
 
-	i = 0
 	while True:
 		try:
-			i = ( i + 1 ) % 2
 			frame = highgui.cvQueryFrame( camera )
 			if frame is None:
 				print "NO FRAMEZ!?!"
 				break
-
-			x = 0
-			for row in frame:
-				for col in row:
-					x = x + 1
-					if col[0] >= options.threshold and col[1] >= options.threshold and col[2] >= options.threshold:
-						print x
+			
+#			for i in range( 0, frame.imageSize - 1 ):
+#                                if frame.imageData[i] >= 200:
+#                                        print i, ":", frame.imageData[i]
 
 			if options.showgui:
 				highgui.cvShowImage( 'Camera', frame )
