@@ -3,6 +3,7 @@
 		<title>Weekend Project: webcam-random-numbers</title>
 	</head>
 	<body>
+	<div style="width: 740px;">
 		<h1>Weekend Project: webcam-random-numbers</h1>
 		<p>
 			This small project is the synthesis of several bits and pieces I found on the web.
@@ -16,17 +17,27 @@
 		<h2>Hardware</h2>
 		<a name="hardware" />
 		<p>
-			Photo's and specs coming soon...
+			The hardware consists of two main parts.  First is the gutted webcam sensor with it's filters removed. You can see how to remove said filters in the YouTube video above.
+		</p>
+		<p>
+			The second part is a sample of Americium pulled from a cheap smoke detector. This radioactive metal is the source of the alpha particles we are detecting.
+		</p>
+		<p>
+			These two components are shielded with aluminum foil, then pressed together with electrical tape. I packaged it all up in a hobby project box for a nicer presentation and closer to complete darkness.
+		</p>
+		<p>
+			<img src="http://jmhobbs.github.com/webcam-random-numbers/hardware/rev2/SNC00279.sm.jpg" style="width: 320px; height: 240px;" />
+			<img src="http://jmhobbs.github.com/webcam-random-numbers/hardware/rev2/SNC00281.sm.jpg" style="width: 320px; height: 240px;" />
+			<img src="http://jmhobbs.github.com/webcam-random-numbers/hardware/rev2/SNC00283.sm.jpg" style="width: 320px; height: 240px;" />
+			<img src="http://jmhobbs.github.com/webcam-random-numbers/hardware/rev2/SNC00285.sm.jpg" style="width: 320px; height: 240px;" />
+			<img src="http://jmhobbs.github.com/webcam-random-numbers/hardware/rev2/SNC00286.sm.jpg" style="width: 320px; height: 240px;" />
+			<img src="http://jmhobbs.github.com/webcam-random-numbers/hardware/rev2/SNC00276.sm.jpg" style="width: 320px; height: 240px;"/>
 		</p>
 
 		<h3>Webcam Damage</h3>
 		<a name="hardware-webcam-damage" />
 		<p>
-			I didn't take into account the fact that Alpha radiation is, well, destructive.  My sensor is dying after less than 24 hours of creation.  I started getting a lot of these as well as dropped frames.
-			<pre>
-				Corrupt JPEG data: premature end of data segment
-			</pre>
-			<img src="http://jmhobbs.github.com/webcam-random-numbers/corruption.sm.png" alt="Corruption" />
+			When I first created this, I didn't take into account the fact that Alpha radiation is, well, destructive.  My first sensor was dying after less than 24 hours of creation, both with bad pixels and bad encoding.  I started getting a lot of bad and dropped frames.
 		</p>
 
 		<p>
@@ -39,29 +50,43 @@
 			<img src="http://jmhobbs.github.com/webcam-random-numbers/late-capture.sm.png" alt="Late Frame Capture" />
 		</p>
 
+		<p>
+			<b>A frame grab from right before I decomissioned that sensor.</b><br/><br/>
+			<img src="http://jmhobbs.github.com/webcam-random-numbers/corruption.sm.png" alt="Corruption" />
+		</p>
+
+		<p>
+			With my second sensor I took some precautions against this damage.  The first was aluminum foil shielding on the circuitry. The second was a tissue paper shield between the Americium and the sensor to reduce the number and power of particles getting through. Time will tell how much of a difference this makes, but visually it appears to have worked.
+		</p>
+
 		<h2>Software</h2>
 		<a name="software" />
 		<p>
-			More info coming soon...
+			My software uses OpenCV to access the camera sensor and iterate over the pixels. The psuedo code for the process is:
+			<pre>
+for pixel in frame:
+  if pixel white:
+    shift least significant bit of pixel index ( row * width + column ) onto buffer
+    if buffer full:
+      write buffer to file
+    skip a few rows ( to avoid re-registering the same alpha scintillation )
+      </pre>
 		</p>
-
-		<h3>Algorithm</h3>
-		<a name="software-algorithm" />
-    <p>
-      More info coming soon...
-    </p>
+		<p>
+			I know very little about random numbers, so my methodology may be flawed.
+		</p>
 
 		<h2>Results</h2>
 		<a name="results" />
 
     <p>
-      More info coming soon...
+      I don't currently have any big samples to test since my sensor died. I'm working on capturing a large file with my new sensor.
     </p>
 
 		<h3>Statistics</h3>
 		<a name="results-statistics" />
     <p>
-      More info coming soon...
+      Coming soon...
     </p>
 <!--//
 <p>
@@ -74,8 +99,8 @@
 
 		<h2>Links</h2>
     <p>
-      More info coming soon...
+      Coming soon...
     </p>
-
+	</div>
 	</body>
 </html>
