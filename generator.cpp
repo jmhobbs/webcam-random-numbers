@@ -10,8 +10,8 @@
 
 // Totally arbitrary.
 #define SAMPLE_SIZE 1048576
-// Almost arbitrary...
-#define THRESHOLD 215
+// Almost arbitrary. My sensor shows "black" as about 33 on each channel.
+#define THRESHOLD 50
 // I visually observed that the largest scintillations only affected a 4x4 block of pixels. So, skipping 4 rows seems safe FOR MY CAMERA
 // Figure out your own row skip you lazy bum.
 #define ROW_SKIP 4
@@ -111,8 +111,10 @@ int main( int argc, char ** argv ) {
 		return -1;
 	}
 
-	cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_WIDTH, 640 );
-	cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_HEIGHT, 480 );
+	std::cout << get_time_stamp() << "Camera Width : " << cvGetCaptureProperty( capture, CV_CAP_PROP_FRAME_WIDTH ) << std::endl;
+	std::cout << get_time_stamp() << "Camera Height: " << cvGetCaptureProperty( capture, CV_CAP_PROP_FRAME_HEIGHT ) << std::endl;
+
+	cvNamedWindow( "Main", CV_WINDOW_AUTOSIZE );
 
 	IplImage * frame;
 
@@ -160,27 +162,31 @@ int main( int argc, char ** argv ) {
 
 		drop_count = 0;
 
-		if( snap ) {
-			string_util << get_snap_name( sample_name ) << ".png";
-			if( cvSaveImage( string_util.str().c_str(), frame ) ) {
-				std::cout << get_time_stamp() << "Saved image:" << string_util.str().c_str() << std::endl;
-				snap = false;
-				string_util.str("");
-			}
-		}
+		cvShowImage( "Main", frame );
 
 		for( row = 0; row < frame->height; row++ ) {
 			for( col = 0; col < frame->width; col++ ) {
 				pixel = cvGet2D( frame, row, col );
-				if( pixel.val[0] > THRESHOLD && pixel.val[1] > THRESHOLD && pixel.val[2] > THRESHOLD ) {
+				if( pixel.val[0] > THRESHOLD || pixel.val[1] > THRESHOLD || pixel.val[2] > THRESHOLD ) {
+
+					if( snap ) {
+						string_util << get_snap_name( sample_name ) << ".png";
+						if( cvSaveImage( string_util.str().c_str(), frame ) ) {
+							std::cout << get_time_stamp() << "Saved image:" << string_util.str().c_str() << std::endl;
+							snap = false;
+							string_util.str("");
+						}
+					}
 
 					// Shift the LSB of the index onto the buffer
 					int index = ( row * frame->width ) + col;
 					buffer = buffer << 1;
 					buffer = buffer ^ ( ( buffer ^ (char) index ) & mask );
 
+					counter += 2;
+
 					// Full buffer?
-					if( ++counter >= 8 ) {
+					if( counter >= 8 ) {
 
 						// Write it to file immediately
 						file.write( &buffer, 1 );
@@ -225,6 +231,8 @@ int main( int argc, char ** argv ) {
 	std::cout << get_time_stamp() << "Shutting Down" << std::endl;
 
 	file.close();
+
+	cvDestroyWindow( "Main" );
 
 	cvReleaseCapture( &capture );
 
